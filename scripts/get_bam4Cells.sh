@@ -65,3 +65,28 @@ if [[ "$CELL_MAP_QC"="TRUE" ]]; then
     echo "Aggregated signal was generated for cell barcodes and non-cell barcodes!"
 fi
 
+BAM=${map_dir}/cell_barcodes.bam
+SAM=${BAM%.bam}.sam
+BAMCB=${BAM%.bam}.CB.bam
+BAMCBSORT=${BAM%.bam}.CB.sorted.bam
+
+# Add CB to bam file
+echo "Adding CB to bam file" $BAM
+${SAMTOOLS_PATH}/samtools view -H -@ $core $BAM > $SAM
+${SAMTOOLS_PATH}/samtools view -@ $core $BAM | awk '/^@/ {print;next} {N=split($1,n,":");print $0 "\tCB:Z:" n[1]}' >> $SAM
+${SAMTOOLS_PATH}/samtools view -bS -@ $core $SAM > $BAMCB
+${SAMTOOLS_PATH}/samtools sort -@ $core $BAMCB ${BAMCBSORT%.bam}
+${SAMTOOLS_PATH}/samtools index $BAMCBSORT
+rm $SAM $BAMCB
+
+# Create fragment file from BAM
+echo "Creating fragents file from" $BAMCBSORT
+BAM=$BAMCBSORT
+FRAGMENTS=${BAM%.bam}.fragments
+sinto fragments -b $BAM -f ${FRAGMENTS}.tmp -t "CB" -m 30 -p $core --use_chrom "(?i)^(scaffold)|(chr)" # takes 5-10 minutes
+sort -k 1,1 -k2,2n ${FRAGMENTS}.tmp > ${FRAGMENTS}
+rm ${FRAGMENTS}.tmp
+${BGZIP_PATH} ${FRAGMENTS}
+${TABIX_PATH} -p bed ${FRAGMENTS}.gz
+echo "Done!"
+

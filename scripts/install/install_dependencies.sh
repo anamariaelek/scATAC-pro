@@ -241,6 +241,76 @@ else
 fi
 
 
+##########################
+## sinto
+##########################
+wasInstalled=0;
+which sinto > /dev/null 2>&1
+if [ $? != "0" ]; then
+    echo -e  "$RED"" sinto not detected, trying to install it now ...""$NORMAL"
+    pip install --upgrade --user sinto
+    export PATH=~/.local/bin:$PATH
+fi
+    
+SINTO_PATH=$( which sinto )
+
+sintover=`sinto --version 2>&1 | cut -d " " -f 2`
+if [ $? != '0' ]; then
+    echo -e  "$RED"" I cannot install sinto, please install it manually! ].""$NORMAL"
+    exit 
+else
+    echo -e "$BLUE""sinto appears to be installed successfully""$NORMAL"
+fi
+
+
+##########################
+## bgzip
+##########################
+wasInstalled=0;
+which bgzip > /dev/null 2>&1
+if [ $? != "0" ]; then
+    echo -e  "$RED"" bgzip not detected, trying to install it now ...""$NORMAL"
+    pip install --upgrade --user bgzip
+    export PATH=~/.local/bin:$PATH
+fi
+    
+BGZIP_PATH=$( which bgzip )
+
+if [ -z ${BGZIP_PATH+x} ]; then
+    echo -e  "$RED"" I cannot install bgzip, please install it manually! ].""$NORMAL"
+    exit 
+else
+    echo -e "$BLUE""bgzip appears to be installed successfully""$NORMAL"
+fi
+
+##########################
+## tabix
+##########################
+wasInstalled=0;
+which tabix > /dev/null 2>&1
+if [ $? != "0" ]; then
+    echo -e  "$RED"" tabix not detected, trying to install it now ...""$NORMAL"
+    if [[ $PYTHON_PATH =~ "conda" ]];then
+        conda install tabix -y --channel bioconda
+    else
+        wget https://sourceforge.net/projects/samtools/files/tabix/tabix-0.2.6.tar.bz2/download
+        tar jxvf tabix-0.2.6.tar.bz2
+        cd tabix-0.2.6
+        make 
+        cp tabix ~/bin/ 
+        export PATH=~/.local/bin:$PATH
+    fi
+fi
+    
+TABIX_PATH=$( which tabix )
+
+if [ -z ${TABIX_PATH+x} ]; then
+    echo -e  "$RED"" I cannot install tabix, please install it manually! ].""$NORMAL"
+    exit 
+else
+    echo -e "$BLUE""tabix appears to be installed successfully""$NORMAL"
+fi
+
 ##################################################################
 ## samtools  
 ##################################################################
@@ -596,6 +666,11 @@ if [ $? = "0" ]; then
     echo "MACS2_PATH = "`dirname $(which macs2)` >> configure_system.txt
 fi
 
+which sinto > /dev/null 2>&1
+if [ $? = "0" ]; then
+    echo "SINTO_PATH = "`dirname $(which sinto)` >> configure_system.txt
+fi
+
 which perl > /dev/null 2>&1
 if [ $? = "0" ]; then
     echo "PERL_PATH = "`dirname $(which perl)` >> configure_system.txt
@@ -611,6 +686,8 @@ fi
 echo -e "HINT_PATH = " $HINT_PATH >> configure_system.txt
 echo -e "TRIMMOMATIC_PATH = " $TRIMMOMATIC_PATH >> configure_system.txt
 echo -e "GEM_PATH = " $GEM_PATH >> configure_system.txt
+echo -e "TABIX_PATH"
+echo -e "" 
 
 ## check rights in PREFIX folder
 
