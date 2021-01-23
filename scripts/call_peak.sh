@@ -1,6 +1,7 @@
 #!/bin/bash
 
 input_bam=$1
+input_bed=${input_bam%%bam}bed
 
 # reading configure file
 curr_dir=`dirname $0`
@@ -25,7 +26,9 @@ if [ "${PEAK_CALLER}" = 'MACS2' ];then
 	unset PYTHONPATH
 	work_dir=${peaks_dir}/MACS2
 	mkdir -p $work_dir
-	${MACS2_PATH}/macs2 callpeak -t $input_bam --outdir $work_dir -n $out_prefix -f BAM $MACS2_OPTS 
+	${BEDTOOLS_PATH}/bedtools bamtobed -i $input_bam > $input_bed
+        ${MACS2_PATH}/macs2 callpeak -t $input_bed --outdir $work_dir -n $out_prefix -f BED $MACS2_OPTS # --shift -100 --extsize 200 
+	#${MACS2_PATH}/macs2 callpeak -t $input_bam --outdir $work_dir -n $out_prefix -f BAM $MACS2_OPTS 
 	#${MACS2_PATH}/macs2 callpeak -t $input_bam --outdir $peaks_dir -f BAM $MACS2_OPTS --nomodel --extsize 147
 
     ## remove peaks whose chromosome is not list in the chrom_size file
